@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RX200 Robot Control</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>RX200 Robot Control Panel</h1>
+    <div id="status-indicator" class="status-offline">Offline</div>
+  </header>
+
+  <div class="control-panels">
+    <!-- Arm Control Panel -->
+    <div class="panel">
+      <h2>Arm Control</h2>
+
+      <div class="control-group">
+        <label for="waist">Waist:</label>
+        <div class="slider-container">
+          <span class="min-value">-3.14</span>
+          <input type="range" id="waist" class="slider" min="-3.14" max="3.14" step="0.01" value="0">
+          <span class="max-value">3.14</span>
+        </div>
+        <input type="number" id="waist-value" class="value-input" min="-3.14" max="3.14" step="0.01" value="0">
+      </div>
+
+      <div class="control-group">
+        <label for="shoulder">Shoulder:</label>
+        <div class="slider-container">
+          <span class="min-value">-1.57</span>
+          <input type="range" id="shoulder" class="slider" min="-1.57" max="1.57" step="0.01" value="0">
+          <span class="max-value">1.57</span>
+        </div>
+        <input type="number" id="shoulder-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+      </div>
+
+      <div class="control-group">
+        <label for="elbow">Elbow:</label>
+        <div class="slider-container">
+          <span class="min-value">-1.57</span>
+          <input type="range" id="elbow" class="slider" min="-1.57" max="1.57" step="0.01" value="0">
+          <span class="max-value">1.57</span>
+        </div>
+        <input type="number" id="elbow-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+      </div>
+
+      <div class="control-group">
+        <label for="wrist-angle">Wrist Angle:</label>
+        <div class="slider-container">
+          <span class="min-value">-1.57</span>
+          <input type="range" id="wrist-angle" class="slider" min="-1.57" max="1.57" step="0.01" value="0">
+          <span class="max-value">1.57</span>
+        </div>
+        <input type="number" id="wrist-angle-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+      </div>
+
+      <div class="control-group">
+        <label for="wrist-rotate">Wrist Rotate:</label>
+        <div class="slider-container">
+          <span class="min-value">-3.14</span>
+          <input type="range" id="wrist-rotate" class="slider" min="-3.14" max="3.14" step="0.01" value="0">
+          <span class="max-value">3.14</span>
+        </div>
+        <input type="number" id="wrist-rotate-value" class="value-input" min="-3.14" max="3.14" step="0.01" value="0">
+      </div>
+
+      <button id="send-arm" class="btn btn-primary">Send to Arm</button>
+      <button id="home-position" class="btn">Home Position</button>
+    </div>
+
+    <!-- Gripper Control Panel -->
+    <div class="panel">
+      <h2>Gripper Control</h2>
+
+      <div class="control-group">
+        <label for="gripper">Gripper:</label>
+        <div class="slider-container">
+          <span class="min-value">0</span>
+          <input type="range" id="gripper" class="slider" min="0" max="0.03" step="0.001" value="0">
+          <span class="max-value">0.03</span>
+        </div>
+        <input type="number" id="gripper-value" class="value-input" min="0" max="0.03" step="0.001" value="0">
+      </div>
+
+      <div class="gripper-buttons">
+        <button id="open-gripper" class="btn">Open Gripper</button>
+        <button id="close-gripper" class="btn">Close Gripper</button>
+        <button id="send-gripper" class="btn btn-primary">Send to Gripper</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sequences and Demo Panel -->
+  <div class="panel">
+    <h2>Sequences</h2>
+    <button id="run-demo" class="btn btn-accent">Run Demo Sequence</button>
+    <div class="sequence-status">
+      <span id="sequence-progress">No sequence running</span>
+      <div id="sequence-progress-bar" class="progress-bar">
+        <div class="progress-fill" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback and Status Panel -->
+  <div class="panel status-panel">
+    <h2>Status & Feedback</h2>
+    <div id="feedback-message" class="feedback">Ready</div>
+    <div id="connection-status">
+      <span>Server Connection:</span>
+      <span id="connection-indicator">Checking...</span>
+    </div>
+    <button id="check-connection" class="btn">Check Connection</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

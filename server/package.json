@@ -1,0 +1,22 @@
+{
+  "name": "rx200-controller-typescript",
+  "version": "1.0.0",
+  "description": "Сервер TypeScript для управления роботом RX200 в RViz",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/app.ts"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "rclnodejs": "^0.32.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^22.13.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.4"
+  }
+}
