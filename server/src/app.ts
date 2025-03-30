@@ -3,29 +3,23 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import rclnodejs from 'rclnodejs';
 import {Node, Publisher} from 'rclnodejs';
-import {initRoutes} from './routes';
+import {initRoutes, updateJointPositions} from './routes';
 
-// Setup Express server
 const app = express();
 const port = 3000;
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, './public')));
+app.use(express.static(path.join(__dirname, '../../client/public')));
 
-// Global variables for ROS publishers
 let armPublisher: Publisher<any>;
 let gripperPublisher: Publisher<any>;
 let rosNode: Node;
 
-// Initialize ROS2 node
 async function initializeROS(): Promise<void> {
   try {
-    // Initialize rclnodejs
     await rclnodejs.init()
 
-    // Create node
     rosNode = new rclnodejs.Node('rx200_controller_node');
 
-    // Create publishers for robot control topics
     armPublisher = rosNode.createPublisher(
       'trajectory_msgs/msg/JointTrajectory',
       '/rx200/arm_controller/joint_trajectory'
@@ -36,27 +30,31 @@ async function initializeROS(): Promise<void> {
       '/rx200/gripper_controller/joint_trajectory'
     );
 
-    // Start node cycle
+    rosNode.createSubscription(
+      'sensor_msgs/msg/JointState',
+      '/rx200/joint_states',
+      (message: any) => {
+        updateJointPositions(message.name, message.position);
+      }
+    );
+
     rosNode.spin();
 
     console.log('ROS2 node initialized');
+    console.log('Subscribed to /rx200/joint_states');
   } catch (error) {
     console.error('Error initializing ROS2:', error);
     throw error;
   }
 }
 
-// Server startup function
 async function startServer(): Promise<void> {
   try {
-    // Initialize ROS
     await initializeROS();
 
-    // Initialize and add routes to the app
     const routes = initRoutes(armPublisher, gripperPublisher);
     app.use('/', routes);
 
-    // Start server
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });
@@ -66,5 +64,4 @@ async function startServer(): Promise<void> {
   }
 }
 
-// Start server
 startServer();

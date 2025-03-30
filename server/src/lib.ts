@@ -1,14 +1,73 @@
 import * as rclnodejs from 'rclnodejs';
-import {SequenceCommand, JointTrajectory} from "./types";
+import {ArmCommand} from "./types";
 
-export function createArmTrajectoryMessage(positions: number[], timeFromStart: number = 1): JointTrajectory {
-  // Check input data
-  if (!positions || !Array.isArray(positions) || positions.length !== 5) {
-    throw new Error('Invalid data format. Positions must be an array of 5 values [waist, shoulder, elbow, wrist_angle, wrist_rotate]');
+const DEFAULT_DELAY = 2;
+
+export function sendCommand({publisher, command}: {
+  publisher: rclnodejs.Publisher<any>; command: ArmCommand
+}): void {
+
+  let joint_names = []
+
+  if (command.type === 'arm') {
+    joint_names = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate']
+  } else if (command.type === 'gripper') {
+    joint_names = ['left_finger', 'right_finger']
   }
 
-  // Create message for arm control
-  return {
+  publisher.publish({
+      header: {
+        stamp: {
+          sec: 0,
+          nanosec: 0
+        },
+        frame_id: ''
+      },
+      joint_names,
+      points: [
+        {
+          positions: command.positions,
+          velocities: [],
+          accelerations: [],
+          effort: [],
+          time_from_start: {
+            sec: Math.floor(command.timeFromStart),
+            nanosec: Math.floor((command.timeFromStart - Math.floor(command.timeFromStart)) * 1000000000)
+          }
+        }
+      ]
+    }
+  );
+}
+
+export function sendBatchCommands(
+  publisher: rclnodejs.Publisher<any>,
+  commands: ArmCommand[],
+  type: 'arm' | 'gripper'
+): void {
+  const joint_names = type === 'arm'
+    ? ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate']
+    : ['left_finger', 'right_finger'];
+
+  const points = [];
+  let cumulativeTime = 0;
+
+  for (const command of commands) {
+    cumulativeTime += (command.delay || DEFAULT_DELAY);
+
+    points.push({
+      positions: command.positions,
+      velocities: [],
+      accelerations: [],
+      effort: [],
+      time_from_start: {
+        sec: command.timeFromStart ? Math.floor(command.timeFromStart) : Math.floor(cumulativeTime),
+        nanosec: command.timeFromStart ? 0 : Math.floor((cumulativeTime - Math.floor(cumulativeTime)) * 1000000000)
+      }
+    });
+  }
+
+  publisher.publish({
     header: {
       stamp: {
         sec: 0,
@@ -16,92 +75,54 @@ export function createArmTrajectoryMessage(positions: number[], timeFromStart: n
       },
       frame_id: ''
     },
-    joint_names: ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate'],
-    points: [
-      {
-        positions: positions,
-        velocities: [],
-        accelerations: [],
-        effort: [],
-        time_from_start: {
-          sec: Math.floor(timeFromStart),
-          nanosec: Math.floor((timeFromStart - Math.floor(timeFromStart)) * 1000000000)
-        }
-      }
-    ]
-  };
+    joint_names,
+    points
+  });
 }
 
-export function createGripperTrajectoryMessage(position: number, timeFromStart: number = 1): JointTrajectory {
-  // Check input data
-  if (position === undefined || typeof position !== 'number') {
-    throw new Error('Invalid data format. Position must be a number from 0.0 (closed) to 0.03 (open)');
+function calculateTotalExecutionTime(sequence: ArmCommand[]): number {
+  let totalTime = 0;
+
+  for (const command of sequence) {
+    totalTime += (command.delay || DEFAULT_DELAY);
   }
 
-  // Create message for gripper control
-  return {
-    header: {
-      stamp: {
-        sec: 0,
-        nanosec: 0
-      },
-      frame_id: ''
-    },
-    joint_names: ['left_finger', 'right_finger'],
-    points: [
-      {
-        positions: [position, -position], // Right finger moves in opposite direction
-        velocities: [],
-        accelerations: [],
-        effort: [],
-        time_from_start: {
-          sec: Math.floor(timeFromStart),
-          nanosec: Math.floor((timeFromStart % 1) * 1e9)
-        }
-      }
-    ]
-  };
-}
-
-export function sendArmCommand(publisher: rclnodejs.Publisher<any>, positions: number[], timeFromStart: number = 1): void {
-  const message = createArmTrajectoryMessage(positions, timeFromStart);
-  publisher.publish(message);
-}
-
-export function sendGripperCommand(publisher: rclnodejs.Publisher<any>, position: number, timeFromStart: number = 1): void {
-  const message = createGripperTrajectoryMessage(position, timeFromStart);
-  publisher.publish(message);
+  return totalTime;
 }
 
 export async function executeSequence(
   armPublisher: rclnodejs.Publisher<any>,
   gripperPublisher: rclnodejs.Publisher<any>,
-  sequence: SequenceCommand[]
+  sequence: ArmCommand[]
 ): Promise<void> {
-  for (const command of sequence) {
-    try {
-      // Check command type
-      if (command.type === 'arm' && command.positions) {
-        const message = createArmTrajectoryMessage(
-          command.positions,
-          command.time_from_start || 1
-        );
-        armPublisher.publish(message);
-      } else if (command.type === 'gripper' && command.position !== undefined) {
-        const message = createGripperTrajectoryMessage(
-          command.position,
-          command.time_from_start || 1
-        );
-        gripperPublisher.publish(message);
-      }
+  const armCommands: ArmCommand[] = [];
+  const gripperCommands: ArmCommand[] = [];
 
-      // Wait for specified time before executing next command
-      await new Promise<void>(resolve => setTimeout(resolve, (command.delay || 1) * 1000));
-    } catch (error) {
-      console.error('Error executing command:', error);
-      throw error;
+  sequence.forEach(command => {
+    if (command.type === 'arm' && command.positions) {
+      armCommands.push(command);
+    } else if (command.type === 'gripper' && command.positions) {
+      gripperCommands.push(command);
     }
-  }
+  });
 
-  console.log('Motion sequence completed');
+  try {
+    if (armCommands.length > 0) {
+      sendBatchCommands(armPublisher, armCommands, 'arm');
+    }
+
+    if (gripperCommands.length > 0) {
+      sendBatchCommands(gripperPublisher, gripperCommands, 'gripper');
+    }
+
+    const totalTime = calculateTotalExecutionTime(sequence);
+
+    await new Promise<void>(resolve => setTimeout(resolve, totalTime * 1000));
+
+    console.log('Motion sequence completed');
+  } catch (error) {
+    console.error('Error executing sequence:', error);
+    throw error;
+  }
 }
+

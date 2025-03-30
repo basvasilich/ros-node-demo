@@ -1,0 +1,11 @@
+{
+  "name": "rx200-browser-client-typescript",
+  "version": "1.0.0",
+  "description": "TypeScript client for controlling RX200 robot",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  }
+}

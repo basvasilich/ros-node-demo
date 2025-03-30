@@ -161,6 +161,23 @@ label {
     background: var(--accent-hover);
 }
 
+.input-with-current {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.current-position {
+    font-size: 0.9em;
+    color: #555;
+    background-color: #f5f5f5;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    min-width: 70px;
+    text-align: right;
+}
+
 .value-input {
     width: 70px;
     padding: 5px;

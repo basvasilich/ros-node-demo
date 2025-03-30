@@ -25,7 +25,10 @@
           <input type="range" id="waist" class="slider" min="-3.14" max="3.14" step="0.01" value="0">
           <span class="max-value">3.14</span>
         </div>
-        <input type="number" id="waist-value" class="value-input" min="-3.14" max="3.14" step="0.01" value="0">
+        <div class="input-with-current">
+          <input type="number" id="waist-value" class="value-input" min="-3.14" max="3.14" step="0.01" value="0">
+          <span class="current-position" id="current-waist">0.0000</span>
+        </div>
       </div>
 
       <div class="control-group">
@@ -35,17 +38,23 @@
           <input type="range" id="shoulder" class="slider" min="-1.57" max="1.57" step="0.01" value="0">
           <span class="max-value">1.57</span>
         </div>
-        <input type="number" id="shoulder-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+        <div class="input-with-current">
+          <input type="number" id="shoulder-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+          <span class="current-position" id="current-shoulder">0.0000</span>
+        </div>
       </div>
 
       <div class="control-group">
         <label for="elbow">Elbow:</label>
         <div class="slider-container">
-          <span class="min-value">-1.57</span>
-          <input type="range" id="elbow" class="slider" min="-1.57" max="1.57" step="0.01" value="0">
-          <span class="max-value">1.57</span>
+          <span class="min-value">-1.30</span>
+          <input type="range" id="elbow" class="slider" min="-1.30" max="1.30" step="0.01" value="0">
+          <span class="max-value">1.30</span>
         </div>
-        <input type="number" id="elbow-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+        <div class="input-with-current">
+          <input type="number" id="elbow-value" class="value-input" min="-1.30" max="1.30" step="0.01" value="0">
+          <span class="current-position" id="current-elbow">0.0000</span>
+        </div>
       </div>
 
       <div class="control-group">
@@ -55,7 +64,10 @@
           <input type="range" id="wrist-angle" class="slider" min="-1.57" max="1.57" step="0.01" value="0">
           <span class="max-value">1.57</span>
         </div>
-        <input type="number" id="wrist-angle-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+        <div class="input-with-current">
+          <input type="number" id="wrist-angle-value" class="value-input" min="-1.57" max="1.57" step="0.01" value="0">
+          <span class="current-position" id="current-wrist-angle">0.0000</span>
+        </div>
       </div>
 
       <div class="control-group">
@@ -65,7 +77,10 @@
           <input type="range" id="wrist-rotate" class="slider" min="-3.14" max="3.14" step="0.01" value="0">
           <span class="max-value">3.14</span>
         </div>
-        <input type="number" id="wrist-rotate-value" class="value-input" min="-3.14" max="3.14" step="0.01" value="0">
+        <div class="input-with-current">
+          <input type="number" id="wrist-rotate-value" class="value-input" min="-3.14" max="3.14" step="0.01" value="0">
+          <span class="current-position" id="current-wrist-rotate">0.0000</span>
+        </div>
       </div>
 
       <button id="send-arm" class="btn btn-primary">Send to Arm</button>
@@ -76,20 +91,9 @@
     <div class="panel">
       <h2>Gripper Control</h2>
 
-      <div class="control-group">
-        <label for="gripper">Gripper:</label>
-        <div class="slider-container">
-          <span class="min-value">0</span>
-          <input type="range" id="gripper" class="slider" min="0" max="0.03" step="0.001" value="0">
-          <span class="max-value">0.03</span>
-        </div>
-        <input type="number" id="gripper-value" class="value-input" min="0" max="0.03" step="0.001" value="0">
-      </div>
-
       <div class="gripper-buttons">
         <button id="open-gripper" class="btn">Open Gripper</button>
         <button id="close-gripper" class="btn">Close Gripper</button>
-        <button id="send-gripper" class="btn btn-primary">Send to Gripper</button>
       </div>
     </div>
   </div>
@@ -98,12 +102,6 @@
   <div class="panel">
     <h2>Sequences</h2>
     <button id="run-demo" class="btn btn-accent">Run Demo Sequence</button>
-    <div class="sequence-status">
-      <span id="sequence-progress">No sequence running</span>
-      <div id="sequence-progress-bar" class="progress-bar">
-        <div class="progress-fill" style="width: 0%"></div>
-      </div>
-    </div>
   </div>
 
   <!-- Feedback and Status Panel -->
@@ -118,6 +116,6 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<script type="module" src="dist/client.js"></script>
 </body>
 </html>
