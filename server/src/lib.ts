@@ -43,20 +43,85 @@ export async function executeSequence(
   gripperPublisher: rclnodejs.Publisher<any>,
   sequence: ArmCommand[]
 ): Promise<void> {
-  for (const command of sequence) {
-    try {
-      if (command.type === 'arm' && command.positions) {
-        sendCommand({publisher: armPublisher, command});
-      } else if (command.type === 'gripper' && command.positions) {
-        sendCommand({publisher: gripperPublisher, command});
-      }
+  const armCommands: ArmCommand[] = [];
+  const gripperCommands: ArmCommand[] = [];
 
-      await new Promise<void>(resolve => setTimeout(resolve, (command.delay || 5) * 1000));
-    } catch (error) {
-      console.error('Error executing command:', error);
-      throw error;
+  sequence.forEach(command => {
+    if (command.type === 'arm' && command.positions) {
+      armCommands.push(command);
+    } else if (command.type === 'gripper' && command.positions) {
+      gripperCommands.push(command);
     }
+  });
+
+  try {
+    if (armCommands.length > 0) {
+      sendBatchCommands(armPublisher, armCommands, 'arm');
+    }
+
+    if (gripperCommands.length > 0) {
+      sendBatchCommands(gripperPublisher, gripperCommands, 'gripper');
+    }
+
+    const totalTime = calculateTotalExecutionTime(sequence);
+
+    await new Promise<void>(resolve => setTimeout(resolve, totalTime * 1000));
+
+    console.log('Motion sequence completed');
+  } catch (error) {
+    console.error('Error executing sequence:', error);
+    throw error;
+  }
+}
+
+function sendBatchCommands(
+  publisher: rclnodejs.Publisher<any>,
+  commands: ArmCommand[],
+  type: 'arm' | 'gripper'
+): void {
+  const joint_names = type === 'arm'
+    ? ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate']
+    : ['left_finger', 'right_finger'];
+
+  const points = [];
+  let cumulativeTime = 0;
+
+  for (const command of commands) {
+    cumulativeTime += (command.delay || 1);
+
+    points.push({
+      positions: command.positions,
+      velocities: [],
+      accelerations: [],
+      effort: [],
+      time_from_start: {
+        sec: Math.floor(cumulativeTime),
+        nanosec: Math.floor((cumulativeTime - Math.floor(cumulativeTime)) * 1000000000)
+      }
+    });
   }
 
-  console.log('Motion sequence completed');
+  // Отправляем одно сообщение с несколькими точками
+  publisher.publish({
+    header: {
+      stamp: {
+        sec: 0,
+        nanosec: 0
+      },
+      frame_id: ''
+    },
+    joint_names,
+    points
+  });
+}
+
+// Функция для расчета общего времени выполнения последовательности
+function calculateTotalExecutionTime(sequence: ArmCommand[]): number {
+  let totalTime = 0;
+
+  for (const command of sequence) {
+    totalTime += (command.delay || 1);
+  }
+
+  return totalTime;
 }
