@@ -4,7 +4,7 @@
   "description": "TypeScript server for controlling RX200 robot",
   "main": "src/app.ts",
   "scripts": {
-    "start": "ts-node src/app.ts"
+    "start": "ts-node ./src/app.ts"
   },
   "dependencies": {
     "body-parser": "^1.20.2",

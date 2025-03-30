@@ -88,15 +88,9 @@ pip3 install interbotix-xs-modules interbotix-common-modules interbotix-percepti
 ```bash
 # Clone the repository
 git clone https://github.com/your-username/rx200-controller.git
-cd rx200-controller
-
-# Install dependencies
+cd rx200-controller/client
 npm install
-
-# Build TypeScript files
-npm run build
-
-# Start the application
+npm build
 npm start
 ```
 
@@ -104,7 +98,7 @@ npm start
 
 Before running the application, you may need to:
 
-1. Update the server IP address in `public/script.js` to match your local network:
+1. Update the server IP address in `public/client.ts` to match your local network:
 
 ```javascript
 const config = {
@@ -174,7 +168,7 @@ The server will start at http://localhost:3000
     - Check ROS2 topics with `ros2 topic list`
 
 2. **Web Interface Not Connecting**:
-    - Verify the correct IP address is set in the script.js file
+    - Verify the correct IP address is set in the client.ts file
     - Check server is running with `npm start`
 
 3. **Robot Not Moving**:
@@ -193,22 +187,6 @@ ros2 node list
 ros2 node info /rx200_controller_node
 ```
 
-## Project Structure
-
-```
-rx200-controller/
-├── src/                    # TypeScript source files
-│   ├── app.ts              # Main server file
-│   ├── lib.ts              # Robot control library
-│   ├── routes.ts           # API routes
-│   └── types.ts            # TypeScript type definitions
-├── public/                 # Frontend files
-│   ├── index.html          # Web interface
-│   ├── script.js           # Frontend JavaScript
-│   └── styles.css          # CSS styles
-├── package.json            # Dependencies and scripts
-└── tsconfig.json           # TypeScript configuration
-```
 ## DOCS
 
 - [Interbotix ROS DOCS](https://docs.trossenrobotics.com/interbotix_xsarms_docs/ros_interface/ros2.html) for the RX200 robot and ROS packages
