@@ -16,8 +16,6 @@ const elements = {
   statusIndicator: document.getElementById('status-indicator'),
   feedbackMessage: document.getElementById('feedback-message'),
   connectionIndicator: document.getElementById('connection-indicator'),
-  sequenceProgress: document.getElementById('sequence-progress'),
-  progressFill: document.querySelector('.progress-fill'),
 
   // Arm controls
   waistSlider: document.getElementById('waist'),
@@ -31,13 +29,9 @@ const elements = {
   wristRotateSlider: document.getElementById('wrist-rotate'),
   wristRotateValue: document.getElementById('wrist-rotate-value'),
 
-  // Gripper controls
-  gripperSlider: document.getElementById('gripper'),
-  gripperValue: document.getElementById('gripper-value'),
 
   // Buttons
   sendArmButton: document.getElementById('send-arm'),
-  sendGripperButton: document.getElementById('send-gripper'),
   homePositionButton: document.getElementById('home-position'),
   openGripperButton: document.getElementById('open-gripper'),
   closeGripperButton: document.getElementById('close-gripper'),
@@ -48,8 +42,6 @@ const elements = {
 // State management
 const state = {
   connected: false,
-  sequenceRunning: false,
-  currentSequence: null,
   sequenceLength: 0,
   sequenceIndex: 0
 };
@@ -62,9 +54,6 @@ function initializeControls() {
   connectSliderToInput(elements.elbowSlider, elements.elbowValue);
   connectSliderToInput(elements.wristAngleSlider, elements.wristAngleValue);
   connectSliderToInput(elements.wristRotateSlider, elements.wristRotateValue);
-
-  // Connect gripper slider to its value input
-  connectSliderToInput(elements.gripperSlider, elements.gripperValue);
 }
 
 // Helper to connect a slider with its numeric input (bidirectional)
@@ -145,14 +134,15 @@ async function sendArmCommand() {
     showFeedback('Sending arm command...', 'warning');
 
     // Send request to server
-    const response = await fetch(`${config.serverUrl}/arm`, {
+    const response = await fetch(`${config.serverUrl}/command`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
+        type: 'arm',
         positions,
-        time_from_start: 1
+        timeFromStart: 1
       })
     });
 
@@ -169,7 +159,7 @@ async function sendArmCommand() {
 }
 
 // Send gripper position command
-async function sendGripperCommand() {
+async function sendGripperCommand(command) {
   if (!state.connected) {
     showFeedback('Cannot send command: Server is not connected', 'error');
     return;
@@ -177,7 +167,7 @@ async function sendGripperCommand() {
 
   try {
     // Get position from gripper slider
-    const position = parseFloat(elements.gripperValue.value);
+    const position = parseFloat(command === 'open' ? 0.03 : 0);
 
     // Validate position
     if (isNaN(position)) {
@@ -188,14 +178,15 @@ async function sendGripperCommand() {
     showFeedback('Sending gripper command...', 'warning');
 
     // Send request to server
-    const response = await fetch(`${config.serverUrl}/gripper`, {
+    const response = await fetch(`${config.serverUrl}/command`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        position,
-        time_from_start: 1
+        positions: [position, -1 * position],
+        type: 'gripper',
+        timeFromStart: 1
       })
     });
 
@@ -231,16 +222,12 @@ function setHomePosition() {
 
 // Set gripper to open position
 function openGripper() {
-  elements.gripperSlider.value = 0.03;
-  elements.gripperValue.value = 0.03;
-  sendGripperCommand();
+  sendGripperCommand('open');
 }
 
 // Set gripper to closed position
 function closeGripper() {
-  elements.gripperSlider.value = 0;
-  elements.gripperValue.value = 0;
-  sendGripperCommand();
+  sendGripperCommand('close');
 }
 
 // Run demo sequence
@@ -258,20 +245,33 @@ async function runDemoSequence() {
   try {
     showFeedback('Starting demo sequence...', 'warning');
 
-    const response = await fetch(`${config.serverUrl}/demo`, {
-      method: 'GET'
+    const response = await fetch(`${config.serverUrl}/sequence`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify({
+        sequence: [
+          {type: 'arm', positions: [0, 0, 0, 0, 0]},
+          {type: 'gripper', positions: [0.03, -0.03]},
+          {type: 'gripper', positions: [0, 0]},
+          {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8]},
+          {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8]},
+          {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8]},
+          {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8]},
+          {type: 'arm', positions: [-1.5, 0, -1.3, 0, 1.8]},
+          {type: 'gripper', positions: [0.03, -0.03]},
+          {type: 'gripper', positions: [0, 0]},
+          {type: 'arm', positions: [0, 0, 0, 0, 0]}
+        ]
+      })
     });
 
     if (response.ok) {
       const data = await response.json();
       showFeedback('Demo sequence started', 'success');
 
-      // Update sequence status
-      updateSequenceStatus(0, data.data.sequenceLength);
-      state.sequenceRunning = true;
-
-      // Simulate progress (since we don't have real-time updates from server)
-      simulateSequenceProgress(data.data.sequenceLength);
     } else {
       const errorData = await response.json();
       throw new Error(errorData.error || `Server error: ${response.status}`);
@@ -279,44 +279,6 @@ async function runDemoSequence() {
   } catch (error) {
     showFeedback(`Failed to start demo: ${error.message}`, 'error');
   }
-}
-
-// Update sequence status display
-function updateSequenceStatus(current, total) {
-  state.sequenceIndex = current;
-  state.sequenceLength = total;
-
-  if (total === 0) {
-    elements.sequenceProgress.textContent = 'No sequence running';
-    elements.progressFill.style.width = '0%';
-    return;
-  }
-
-  const percentage = Math.round((current / total) * 100);
-  elements.sequenceProgress.textContent = `Step ${current} of ${total} (${percentage}%)`;
-  elements.progressFill.style.width = `${percentage}%`;
-}
-
-// Simulate sequence progress (since we don't have real-time feedback)
-function simulateSequenceProgress(totalSteps) {
-  let currentStep = 0;
-  const stepDuration = 2000; // Assuming each step takes 2 seconds
-
-  const intervalId = setInterval(() => {
-    currentStep++;
-    updateSequenceStatus(currentStep, totalSteps);
-
-    if (currentStep >= totalSteps) {
-      clearInterval(intervalId);
-      state.sequenceRunning = false;
-      showFeedback('Sequence completed', 'success');
-
-      // Reset status after a delay
-      setTimeout(() => {
-        updateSequenceStatus(0, 0);
-      }, 3000);
-    }
-  }, stepDuration);
 }
 
 // Display feedback message with appropriate styling
@@ -342,7 +304,6 @@ function showFeedback(message, type = 'info') {
 function setupEventListeners() {
   // Arm and gripper control buttons
   elements.sendArmButton.addEventListener('click', sendArmCommand);
-  elements.sendGripperButton.addEventListener('click', sendGripperCommand);
   elements.homePositionButton.addEventListener('click', setHomePosition);
   elements.openGripperButton.addEventListener('click', openGripper);
   elements.closeGripperButton.addEventListener('click', closeGripper);
