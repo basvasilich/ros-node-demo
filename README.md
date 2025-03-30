@@ -29,10 +29,16 @@ sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 # Install ROS2 Humble
+sudo apt install software-properties-common
+sudo add-apt-repository universe
+
 sudo apt update && sudo apt install curl -y
-curl 'https://raw.githubusercontent.com/Interbotix/interbotix_ros_manipulators/main/interbotix_ros_xsarms/install/amd64/xsarm_amd64_install.sh' > xsarm_amd64_install.sh
-chmod +x xsarm_amd64_install.sh
-./xsarm_amd64_install.sh -d humble
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+sudo apt install ros-humble-desktop
+sudo apt install ros-humble-ros-base
+sudo apt install ros-dev-tools
+
 
 # Add ROS2 environment setup to .bashrc
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
@@ -59,28 +65,9 @@ npm --version
 ### 3. Install Interbotix RX200 ROS2 Packages
 
 ```bash
-# Create a workspace directory
-mkdir -p ~/interbotix_ws/src
-
-# Clone the Interbotix repositories
-cd ~/interbotix_ws/src
-git clone https://github.com/Interbotix/interbotix_ros_manipulators.git -b humble
-git clone https://github.com/Interbotix/interbotix_ros_toolboxes.git -b humble
-
-# Install dependencies
-cd ~/interbotix_ws
-rosdep update
-rosdep install --from-paths src --ignore-src -r -y
-
-# Build the workspace
-colcon build --symlink-install
-
-# Source the workspace
-echo "source ~/interbotix_ws/install/setup.bash" >> ~/.bashrc
-source ~/.bashrc
-
-# Install the Interbotix Python Modules
-pip3 install interbotix-xs-modules interbotix-common-modules interbotix-perception-modules
+curl 'https://raw.githubusercontent.com/Interbotix/interbotix_ros_manipulators/main/interbotix_ros_xsarms/install/amd64/xsarm_amd64_install.sh' > xsarm_amd64_install.sh
+chmod +x xsarm_amd64_install.sh
+./xsarm_amd64_install.sh -d humble
 ```
 
 ### 4. Install Robot Controller Application
@@ -91,6 +78,8 @@ git clone https://github.com/your-username/rx200-controller.git
 cd rx200-controller/client
 npm install
 npm build
+cd ../server
+npm install
 npm start
 ```
 
@@ -98,7 +87,7 @@ npm start
 
 Before running the application, you may need to:
 
-1. Update the server IP address in `public/client.ts` to match your local network:
+1. Update the server IP address in `client/src/client.ts` to match your local network:
 
 ```javascript
 const config = {
