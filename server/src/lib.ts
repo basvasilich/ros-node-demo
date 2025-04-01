@@ -1,6 +1,8 @@
 import * as rclnodejs from 'rclnodejs';
 import {ArmCommand} from "./types";
 
+const DEFAULT_DELAY = 2;
+
 export function sendCommand({publisher, command}: {
   publisher: rclnodejs.Publisher<any>; command: ArmCommand
 }): void {
@@ -36,6 +38,58 @@ export function sendCommand({publisher, command}: {
       ]
     }
   );
+}
+
+export function sendBatchCommands(
+  publisher: rclnodejs.Publisher<any>,
+  commands: ArmCommand[],
+  type: 'arm' | 'gripper'
+): void {
+  const joint_names = type === 'arm'
+    ? ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate']
+    : ['left_finger', 'right_finger'];
+
+  const points = [];
+  let cumulativeTime = 0;
+
+  for (const command of commands) {
+    cumulativeTime += (command.delay || DEFAULT_DELAY);
+
+    points.push({
+      positions: command.positions,
+      velocities: [],
+      accelerations: [],
+      effort: [],
+      time_from_start: {
+        sec: Math.floor(cumulativeTime),
+        nanosec: Math.floor((cumulativeTime - Math.floor(cumulativeTime)) * 1000000000)
+      }
+    });
+  }
+
+  // Отправляем одно сообщение с несколькими точками
+  publisher.publish({
+    header: {
+      stamp: {
+        sec: 0,
+        nanosec: 0
+      },
+      frame_id: ''
+    },
+    joint_names,
+    points
+  });
+}
+
+// Функция для расчета общего времени выполнения последовательности
+function calculateTotalExecutionTime(sequence: ArmCommand[]): number {
+  let totalTime = 0;
+
+  for (const command of sequence) {
+    totalTime += (command.delay || DEFAULT_DELAY);
+  }
+
+  return totalTime;
 }
 
 export async function executeSequence(
@@ -74,54 +128,3 @@ export async function executeSequence(
   }
 }
 
-function sendBatchCommands(
-  publisher: rclnodejs.Publisher<any>,
-  commands: ArmCommand[],
-  type: 'arm' | 'gripper'
-): void {
-  const joint_names = type === 'arm'
-    ? ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate']
-    : ['left_finger', 'right_finger'];
-
-  const points = [];
-  let cumulativeTime = 0;
-
-  for (const command of commands) {
-    cumulativeTime += (command.delay || 1);
-
-    points.push({
-      positions: command.positions,
-      velocities: [],
-      accelerations: [],
-      effort: [],
-      time_from_start: {
-        sec: Math.floor(cumulativeTime),
-        nanosec: Math.floor((cumulativeTime - Math.floor(cumulativeTime)) * 1000000000)
-      }
-    });
-  }
-
-  // Отправляем одно сообщение с несколькими точками
-  publisher.publish({
-    header: {
-      stamp: {
-        sec: 0,
-        nanosec: 0
-      },
-      frame_id: ''
-    },
-    joint_names,
-    points
-  });
-}
-
-// Функция для расчета общего времени выполнения последовательности
-function calculateTotalExecutionTime(sequence: ArmCommand[]): number {
-  let totalTime = 0;
-
-  for (const command of sequence) {
-    totalTime += (command.delay || 1);
-  }
-
-  return totalTime;
-}
