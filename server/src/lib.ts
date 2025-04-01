@@ -17,7 +17,7 @@ export function sendCommand({publisher, command}: {
 
   publisher.publish({
       header: {
-        stamp:  {
+        stamp: {
           sec: 0,
           nanosec: 0
         },
@@ -69,15 +69,19 @@ export function sendBatchCommands(
 
   // Отправляем одно сообщение с несколькими точками
   publisher.publish({
-    header: {
-      stamp: {
-        sec: 0,
-        nanosec: 0
+    cmd_type: 'group',
+    name: 'arm',
+    traj: {
+      header: {
+        stamp: {
+          sec: 0,
+          nanosec: 0
+        },
+        frame_id: ''
       },
-      frame_id: ''
-    },
-    joint_names,
-    points
+      joint_names,
+      points
+    }
   });
 }
 

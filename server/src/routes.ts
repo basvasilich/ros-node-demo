@@ -1,6 +1,6 @@
-import {Router, Request, Response} from 'express';
-import {Publisher} from 'rclnodejs';
-import {ArmCommand} from './types';
+import { Router, Request, Response } from 'express';
+import { Publisher } from 'rclnodejs';
+import { ArmCommand } from './types';
 import {
   sendCommand,
   executeSequence as execSequence
@@ -29,7 +29,7 @@ export function initRoutes(armPub: Publisher<any>, gripperPub: Publisher<any>) {
         });
       }
 
-      sendCommand({publisher: command.type === 'arm' ? armPublisher : gripperPublisher, command});
+      sendCommand({publisher: command.type === 'arm'? armPublisher: gripperPublisher, command});
 
       res.json({
         success: true,
@@ -46,7 +46,7 @@ export function initRoutes(armPub: Publisher<any>, gripperPub: Publisher<any>) {
   });
 
   router.post('/sequence', (req: Request, res: Response) => {
-    const {sequence} = req.body as { sequence: ArmCommand[] };
+    const { sequence } = req.body as { sequence: ArmCommand[] };
 
     if (!sequence || !Array.isArray(sequence)) {
       return res.status(400).json({

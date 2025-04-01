@@ -1,7 +1,7 @@
 import {ArmCommand, ClientConfig, DOMElements, ClientState} from "./types";
 
 const config: ClientConfig = {
-  serverUrl: 'http://192.168.64.3:3000',
+  serverUrl: 'http://192.168.1.102:3000',
   statusInterval: 5000,
   requestTimeout: 3000
 };
@@ -274,15 +274,11 @@ async function runDemoSequence(): Promise<void> {
 
     const demoSequence: ArmCommand[] = [
       {type: 'arm', positions: [0, 0, 0, 0, 0], timeFromStart: 1},
-      {type: 'gripper', positions: [0.03, -0.03], timeFromStart: 1},
-      {type: 'gripper', positions: [0, 0], timeFromStart: 1},
       {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8], timeFromStart: 1},
       {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8], timeFromStart: 1},
       {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8], timeFromStart: 1},
       {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8], timeFromStart: 1},
       {type: 'arm', positions: [-1.5, 0, -1.3, 0, 1.8], timeFromStart: 1},
-      {type: 'gripper', positions: [0.03, -0.03], timeFromStart: 1},
-      {type: 'gripper', positions: [0, 0], timeFromStart: 1},
       {type: 'arm', positions: [0, 0, 0, 0, 0], timeFromStart: 1}
     ];
 

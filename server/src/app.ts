@@ -27,8 +27,8 @@ async function initializeROS(): Promise<void> {
 
     // Create publishers for robot control topics
     armPublisher = rosNode.createPublisher(
-      'trajectory_msgs/msg/JointTrajectory',
-      '/rx200/arm_controller/joint_trajectory'
+      'interbotix_xs_msgs/msg/JointTrajectoryCommand',
+      '/rx200/commands/joint_trajectory'
     );
 
     gripperPublisher = rosNode.createPublisher(
