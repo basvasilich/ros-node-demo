@@ -8,6 +8,14 @@ import {
 
 const router = Router();
 
+let currentJointPositions= {};
+
+export function updateJointPositions(names: string[], positions: number[]): void {
+  names.forEach((name, index) => {
+    currentJointPositions[name] = positions[index];
+  })
+}
+
 export function initRoutes(armPub: Publisher<any>, gripperPub: Publisher<any>) {
   const armPublisher = armPub;
   const gripperPublisher = gripperPub;
@@ -15,7 +23,8 @@ export function initRoutes(armPub: Publisher<any>, gripperPub: Publisher<any>) {
   router.get('/status', (req: Request, res: Response) => {
     res.json({
       status: 'online',
-      message: 'RX200 control server is running and ready'
+      message: 'RX200 control server is running and ready',
+      jointPositions: currentJointPositions
     });
   });
 

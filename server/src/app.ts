@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import rclnodejs from 'rclnodejs';
 import {Node, Publisher} from 'rclnodejs';
-import {initRoutes} from './routes';
+import {initRoutes, updateJointPositions} from './routes';
 
 // Setup Express server
 const app = express();
@@ -36,10 +36,19 @@ async function initializeROS(): Promise<void> {
       '/rx200/gripper_controller/joint_trajectory'
     );
 
+    rosNode.createSubscription(
+      'sensor_msgs/msg/JointState',
+      '/rx200/joint_states',
+      (message: any) => {
+        updateJointPositions(message.name, message.position);
+      }
+    );
+
     // Start node cycle
     rosNode.spin();
 
     console.log('ROS2 node initialized');
+    console.log('Subscribed to /rx200/joint_states');
   } catch (error) {
     console.error('Error initializing ROS2:', error);
     throw error;

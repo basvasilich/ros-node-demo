@@ -19,6 +19,13 @@ export interface DOMElements {
   feedbackMessage: HTMLElement | null;
   connectionIndicator: HTMLElement | null;
 
+  currentWaist: HTMLElement | null;
+  currentShoulder: HTMLElement | null;
+  currentElbow: HTMLElement | null;
+  currentWristAngle: HTMLElement | null;
+  currentWristRotate: HTMLElement | null;
+  currentGripper: HTMLElement | null;
+
   // Arm controls
   waistSlider: HTMLInputElement | null;
   waistValue: HTMLInputElement | null;
@@ -46,4 +53,11 @@ export interface ClientState {
   sequenceRunning?: boolean;
   sequenceLength: number;
   sequenceIndex: number;
+  jointPositions: {
+    waist: number;
+    shoulder: number;
+    elbow: number;
+    wrist_angle: number;
+    wrist_rotate: number;
+  };
 }

@@ -2,7 +2,7 @@ import {ArmCommand, ClientConfig, DOMElements, ClientState} from "./types";
 
 const config: ClientConfig = {
   serverUrl: 'http://192.168.64.3:3000',
-  statusInterval: 5000,
+  statusInterval: 1000,
   requestTimeout: 3000
 };
 
@@ -19,6 +19,13 @@ const elements: DOMElements = {
   statusIndicator: document.getElementById('status-indicator'),
   feedbackMessage: document.getElementById('feedback-message'),
   connectionIndicator: document.getElementById('connection-indicator'),
+
+  currentWaist: document.getElementById('current-waist'),
+  currentShoulder: document.getElementById('current-shoulder'),
+  currentElbow: document.getElementById('current-elbow'),
+  currentWristAngle: document.getElementById('current-wrist-angle'),
+  currentWristRotate: document.getElementById('current-wrist-rotate'),
+  currentGripper: document.getElementById('current-gripper'),
 
   waistSlider: getInputElement('waist'),
   waistValue: getInputElement('waist-value'),
@@ -43,7 +50,14 @@ const state: ClientState = {
   connected: false,
   sequenceRunning: false,
   sequenceLength: 0,
-  sequenceIndex: 0
+  sequenceIndex: 0,
+  jointPositions: {
+    waist: 0,
+    shoulder: 0,
+    elbow: 0,
+    wrist_angle: 0,
+    wrist_rotate: 0
+  }
 };
 
 function initializeControls(): void {
@@ -96,6 +110,9 @@ async function checkConnection(): Promise<boolean> {
       state.connected = true;
       updateConnectionStatus('Connected', 'connected');
 
+      state.jointPositions = data.jointPositions;
+      updateJointPositionsDisplay();
+
       if (elements.statusIndicator) {
         elements.statusIndicator.textContent = 'Online';
         elements.statusIndicator.className = 'status-online';
@@ -126,6 +143,31 @@ function updateConnectionStatus(text: string, className: string): void {
     elements.connectionIndicator.className = className;
   }
 }
+function updateJointPositionsDisplay(): void {
+  const positions = state.jointPositions;
+
+  // Update each specific current value span
+  if (elements.currentWaist && positions.waist !== undefined) {
+    elements.currentWaist.textContent = `${parseFloat(positions.waist.toString()).toFixed(4)}`;
+  }
+
+  if (elements.currentShoulder && positions.shoulder !== undefined) {
+    elements.currentShoulder.textContent = `${parseFloat(positions.shoulder.toString()).toFixed(4)}`;
+  }
+
+  if (elements.currentElbow && positions.elbow !== undefined) {
+    elements.currentElbow.textContent = `${parseFloat(positions.elbow.toString()).toFixed(4)}`;
+  }
+
+  if (elements.currentWristAngle && positions.wrist_angle !== undefined) {
+    elements.currentWristAngle.textContent = `${parseFloat(positions.wrist_angle.toString()).toFixed(4)}`;
+  }
+
+  if (elements.currentWristRotate && positions.wrist_rotate !== undefined) {
+    elements.currentWristRotate.textContent = `${parseFloat(positions.wrist_rotate.toString()).toFixed(4)}`;
+  }
+}
+
 
 async function sendArmCommand(): Promise<void> {
   if (!state.connected) {
@@ -274,16 +316,16 @@ async function runDemoSequence(): Promise<void> {
 
     const demoSequence: ArmCommand[] = [
       {type: 'arm', positions: [0, 0, 0, 0, 0], timeFromStart: 1},
-      {type: 'gripper', positions: [0.03, -0.03], timeFromStart: 1},
-      {type: 'gripper', positions: [0, 0], timeFromStart: 1},
-      {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8], timeFromStart: 1},
-      {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8], timeFromStart: 1},
-      {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8], timeFromStart: 1},
-      {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8], timeFromStart: 1},
-      {type: 'arm', positions: [-1.5, 0, -1.3, 0, 1.8], timeFromStart: 1},
-      {type: 'gripper', positions: [0.03, -0.03], timeFromStart: 1},
-      {type: 'gripper', positions: [0, 0], timeFromStart: 1},
-      {type: 'arm', positions: [0, 0, 0, 0, 0], timeFromStart: 1}
+      {type: 'gripper', positions: [0.03, -0.03], timeFromStart: 2},
+      {type: 'gripper', positions: [0, 0], timeFromStart: 3},
+      {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8], timeFromStart: 2},
+      {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8], timeFromStart: 3},
+      {type: 'arm', positions: [-1.5, 0, -1.3, -0.7, 1.8], timeFromStart: 4},
+      {type: 'arm', positions: [-1.5, 0, -1.3, 0.7, 1.8], timeFromStart: 5},
+      {type: 'arm', positions: [-1.5, 0, -1.3, 0, 1.8], timeFromStart: 6},
+      {type: 'gripper', positions: [0.03, -0.03], timeFromStart: 7},
+      {type: 'gripper', positions: [0, 0], timeFromStart: 8},
+      {type: 'arm', positions: [0, 0, 0, 0, 0], timeFromStart: 9}
     ];
 
     const response = await fetch(`${config.serverUrl}/sequence`, {

@@ -17,7 +17,7 @@ export function sendCommand({publisher, command}: {
 
   publisher.publish({
       header: {
-        stamp:  {
+        stamp: {
           sec: 0,
           nanosec: 0
         },
@@ -61,8 +61,8 @@ export function sendBatchCommands(
       accelerations: [],
       effort: [],
       time_from_start: {
-        sec: Math.floor(cumulativeTime),
-        nanosec: Math.floor((cumulativeTime - Math.floor(cumulativeTime)) * 1000000000)
+        sec: command.timeFromStart ? Math.floor(command.timeFromStart) : Math.floor(cumulativeTime),
+        nanosec: command.timeFromStart ? 0 : Math.floor((cumulativeTime - Math.floor(cumulativeTime)) * 1000000000)
       }
     });
   }
